@@ -1,0 +1,33 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(powershell -Command:*)",
+      "Bash(dir /s \"C:\\Users\\Admin\\Projects\\SinfoloBot\")",
+      "Bash(test:*)",
+      "Bash(venv/Scripts/python.exe:*)",
+      "Bash(python setup_python311.py:*)",
+      "Bash(python run_setup.py:*)",
+      "Bash(auto_setup.bat)",
+      "Bash(cmd /c auto_setup.bat)",
+      "Bash(pip install:*)",
+      "Bash(C:/Python311/python.exe --version)",
+      "Bash(C:/Python311/python.exe -m venv venv)",
+      "Bash(venv/Scripts/pip install:*)",
+      "Bash(timeout 30 venv/Scripts/python.exe:*)",
+      "Bash(venvScriptspip install pymongo)",
+      "Bash(cmd /c setup_and_run.bat)",
+      "Bash(timeout 10 cmd:*)",
+      "Bash(timeout:*)",
+      "Bash(dir /s C:UsersAdminProjectsSinfoloBot*.py 2)",
+      "Bash(nul)",
+      "Bash(findstr:*)",
+      "Bash(dir /s /b \"C:\\Users\\Admin\\Projects\\SinfoloBot\\*.py\" 2)",
+      "Bash(dir:*)",
+      "Bash(git init:*)",
+      "Bash(gh auth status:*)",
+      "Bash(git add:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

@@ -1,0 +1,209 @@
+# Multi-Pair Trading Configuration
+# Optimized settings for each pair based on backtest results
+
+# MetaTrader 5 Connection
+mt5:
+  login: 52605897
+  password: "K0n&22QJoJjIND"
+  server: "ICMarketsSC-Demo"
+  timeout: 60000
+
+# Trading Parameters
+trading:
+  # Multi-Pair Setup - Each pair with optimal timeframe
+  pairs:
+    USDJPY:
+      enabled: true
+      timeframe: "M5"
+      expected_return: 15.93
+      win_rate: 48.7
+      profit_factor: 1.75
+
+    EURUSD:
+      enabled: true
+      timeframe: "H1"
+      expected_return: 8.55
+      win_rate: 71.4
+      profit_factor: 3.75
+
+    AUDUSD:
+      enabled: true
+      timeframe: "M5"
+      expected_return: 1.34
+      win_rate: 50.0
+      profit_factor: 1.48
+
+    GBPUSD:
+      enabled: false  # Disabled - underperforms
+      timeframe: "M5"
+      expected_return: -0.31
+      win_rate: 42.9
+      profit_factor: 0.97
+
+  # Strategy Selection
+  active_strategy: "trend_pullback"
+
+  # PROP FIRM COMPLIANCE
+  compliance:
+    require_stop_loss: true
+    news_buffer_minutes: 2
+    min_hold_minutes: 2
+    max_trades_per_day: 15  # Increased for multi-pair
+
+  # Trading Hours (UTC)
+  trading_hours:
+    enabled: true
+    start: "08:00"
+    end: "16:00"
+
+  # Position Limits - Multi-Pair
+  max_open_positions: 3  # Allow one per pair
+  max_positions_per_pair: 1
+
+# Risk Management - PROP FIRM SETTINGS
+risk:
+  # Position Sizing - Conservative for multi-pair
+  risk_per_trade: 0.75  # 0.75% per trade (reduced for multiple positions)
+
+  # Stop Loss - MANDATORY
+  stop_loss:
+    type: "atr"
+    atr_multiplier: 1.5
+
+  # Take Profit - 1:2 Risk/Reward
+  take_profit:
+    type: "risk_reward"
+    risk_reward_ratio: 2.0
+
+  # NO trailing stop for prop firm
+  trailing_stop:
+    enabled: false
+
+  # NO break-even for prop firm
+  breakeven_stop:
+    enabled: false
+
+  # Daily Loss Limit
+  max_daily_loss:
+    enabled: true
+    percentage: 3.0  # 3% for multi-pair (prop firm limit is usually 4-5%)
+
+  # Maximum Exposure - Multi-pair
+  max_total_exposure: 3.0  # Max 3% of account in positions
+
+# Strategy Parameters - Per Pair Optimization
+strategies:
+  # USDJPY Settings (M5) - Best performer
+  USDJPY:
+    timeframe: "M5"
+    ema_period: 50
+    rsi_period: 14
+    rsi_buy_threshold: 32
+    rsi_sell_threshold: 68
+    use_rsi_exit: false
+    atr_period: 14
+    adx_period: 14
+    min_adx: 20
+    risk_reward: 2.0
+    sl_atr_multiplier: 1.5
+    min_atr: 0.05  # Higher for JPY pairs
+    min_ema_distance: 0.03
+    min_confidence: 0.70
+    min_data_points: 60
+    require_rsi_momentum: true
+
+  # EURUSD Settings (H1) - High win rate
+  EURUSD:
+    timeframe: "H1"
+    ema_period: 50
+    rsi_period: 14
+    rsi_buy_threshold: 32
+    rsi_sell_threshold: 68
+    use_rsi_exit: false
+    atr_period: 14
+    adx_period: 14
+    min_adx: 20
+    risk_reward: 2.0
+    sl_atr_multiplier: 1.5
+    min_atr: 0.0003
+    min_ema_distance: 0.0002
+    min_confidence: 0.70
+    min_data_points: 60
+    require_rsi_momentum: true
+
+  # AUDUSD Settings (M5)
+  AUDUSD:
+    timeframe: "M5"
+    ema_period: 50
+    rsi_period: 14
+    rsi_buy_threshold: 32
+    rsi_sell_threshold: 68
+    use_rsi_exit: false
+    atr_period: 14
+    adx_period: 14
+    min_adx: 20
+    risk_reward: 2.0
+    sl_atr_multiplier: 1.5
+    min_atr: 0.0003
+    min_ema_distance: 0.0002
+    min_confidence: 0.70
+    min_data_points: 60
+    require_rsi_momentum: true
+
+  # Default/Fallback settings
+  trend_pullback:
+    timeframe: "M5"
+    ema_period: 50
+    rsi_period: 14
+    rsi_buy_threshold: 32
+    rsi_sell_threshold: 68
+    use_rsi_exit: false
+    atr_period: 14
+    adx_period: 14
+    min_adx: 20
+    risk_reward: 2.0
+    sl_atr_multiplier: 1.5
+    min_atr: 0.0003
+    min_ema_distance: 0.0002
+    min_confidence: 0.70
+    min_data_points: 60
+    require_rsi_momentum: true
+
+# Backtesting
+backtest:
+  start_date: "2024-01-01"
+  end_date: "2025-11-20"
+  initial_balance: 10000
+  commission: 0.00007
+
+# Logging
+logging:
+  level: "INFO"
+  log_to_file: true
+  log_file: "logs/multi_pair_bot.log"
+  log_trades: true
+  trade_log_file: "logs/multi_pair_trades.log"
+
+# Bot Behavior
+bot:
+  scan_interval: 30  # Faster scanning for multi-pair
+  heartbeat_interval: 300
+  auto_restart: true
+  max_reconnect_attempts: 10
+
+# Database
+database:
+  enabled: true
+  connection_string: "mongodb://localhost:27017"
+  database_name: "multi_pair_bot"
+
+# MULTI-PAIR STRATEGY SUMMARY:
+# ============================
+# USDJPY (M5): Best returns +15.93%, 39 trades, PF 1.75
+# EURUSD (H1): High win rate 71.4%, 7 trades, PF 3.75
+# AUDUSD (M5): Stable +1.34%, 4 trades, PF 1.48
+#
+# Expected Combined Performance:
+# - More trade opportunities across pairs
+# - Diversified risk across currencies
+# - Different timeframes reduce correlation

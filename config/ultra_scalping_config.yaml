@@ -1,0 +1,256 @@
+# MT5 Ultra Scalping Bot Configuration
+# Optimized for EUR/USD on M1 timeframe
+# Conservative risk, 1-3 positions max, fast entries/exits
+
+# MetaTrader 5 Connection
+mt5:
+  login: 52605897  # Your MT5 account number
+  password: "K0n&22QJoJjIND"  # Your MT5 password
+  server: "ICMarketsSC-Demo"  # Your broker's server name
+  timeout: 60000  # Connection timeout in milliseconds
+
+# Trading Parameters
+trading:
+  # Asset Selection - Major pairs and crosses for multi-pair scanning
+  symbols:
+    # Major Pairs
+    - "EURUSD"   # Primary - tight spreads, high liquidity
+    - "GBPUSD"   # Cable - good volatility
+    - "USDJPY"   # Ninja - high liquidity
+    - "USDCHF"   # Swissy
+    - "AUDUSD"   # Aussie
+    - "USDCAD"   # Loonie
+    - "NZDUSD"   # Kiwi
+    # Cross Pairs
+    - "EURJPY"   # High volatility cross
+    - "GBPJPY"   # Very volatile - wider stops recommended
+    - "EURGBP"   # Lower volatility cross
+    - "AUDCAD"   # Commodity cross
+    - "AUDNZD"   # Pacific cross
+    - "EURCHF"   # Safe haven cross
+    - "EURAUD"   # Popular cross
+    - "GBPAUD"   # Volatile cross
+    - "GBPCAD"   # Commodity cross
+    - "CADJPY"   # Yen cross
+    - "NZDJPY"   # Yen cross
+
+  # Strategy Selection
+  active_strategy: "ultra_scalping"  # Ultra fast scalping strategy
+
+  # Multi-Pair Scanning Configuration
+  multi_pair_scan:
+    enabled: true                    # Enable multi-pair scanning and ranking
+    max_trades_per_scan: 3           # Maximum number of trades to open per scan cycle
+    min_confidence_threshold: 0.55   # Lowered from 0.65 to match new confidence scoring
+    require_all_filters: true        # Must pass all market filters (volatility, spread, session, trend)
+    log_scan_results: true           # Log detailed scan results showing all pairs analyzed
+
+  # Trading Hours (24-hour format, UTC time)
+  # Scalping works best during high liquidity sessions
+  trading_hours:
+    enabled: true  # Only trade during optimal hours
+    start: "07:00"  # London open
+    end: "16:00"  # Before NY close (avoid low liquidity)
+
+  # Position Limits - Conservative for scalping
+  max_open_positions: 3  # Maximum 1-3 positions as requested
+  max_positions_per_pair: 1  # Only 1 position per pair to avoid overexposure
+
+# Risk Management - CONSERVATIVE SETTINGS
+risk:
+  # Position Sizing - Moderate for scalping
+  risk_per_trade: 1.0  # 1.0% risk per trade (moderate, $100 per trade on $10k)
+
+  # Stop Loss & Take Profit - Tight for scalping
+  stop_loss:
+    type: "fixed_pips"  # Fixed pips work best for scalping
+    fixed_pips: 5  # Very tight SL: 5 pips for M1 scalping
+    atr_multiplier: 1.5  # Alternative: 1.5x ATR (tighter than normal)
+
+  take_profit:
+    type: "risk_reward"  # Use risk-reward ratio
+    risk_reward_ratio: 2.0  # 1:2 RR ratio (5 pip SL = 10 pip TP)
+    fixed_pips: 10  # Alternative: Fixed 10 pip TP
+    atr_multiplier: 3.0  # Alternative: 3x ATR
+
+  # Trailing Stop - Essential for scalping to lock profits
+  trailing_stop:
+    enabled: true
+    trigger_pips: 5  # Start trailing after 5 pips profit
+    distance_pips: 3  # Keep SL 3 pips behind price
+
+  # Break-Even Stop Loss - Protect profits by moving SL to entry
+  breakeven_stop:
+    enabled: true
+    trigger_pips: 3  # Move to break-even after 3 pips profit (60% to TP)
+    buffer_pips: 0.2  # Add 0.2 pip buffer beyond entry to cover spread
+
+  # Daily Loss Limit - Conservative protection
+  max_daily_loss:
+    enabled: true
+    percentage: 2.0  # Stop trading if -2% daily loss reached
+    amount: null  # Or set fixed dollar amount
+
+  # Maximum Exposure
+  max_total_exposure: 5.0  # Max 5% of account in all positions (conservative)
+
+# Strategy Parameters - Ultra Scalping
+strategies:
+  ultra_scalping:
+    timeframe: "M1"  # 1-minute timeframe for ultra scalping
+
+    # EMA Settings (fast-moving for M1)
+    ema_fast: 5  # Very fast EMA for immediate trend
+    ema_medium: 13  # Medium EMA for crossover signals
+    ema_slow: 21  # Slow EMA for trend filter
+
+    # RSI Settings (faster for M1)
+    rsi_period: 9  # Faster RSI period for scalping
+    rsi_oversold: 35  # Not too extreme for frequent signals
+    rsi_overbought: 65  # Not too extreme for frequent signals
+    rsi_extreme_low: 20  # Exit threshold
+    rsi_extreme_high: 80  # Exit threshold
+
+    # Bollinger Bands
+    bb_period: 20  # Standard BB period
+    bb_std: 2.0  # 2 standard deviations
+
+    # MACD Settings (faster for M1)
+    macd_fast: 5  # Fast MACD for scalping
+    macd_slow: 13
+    macd_signal: 5
+
+    # ATR for volatility
+    atr_period: 14
+
+    # ADX for trend strength
+    adx_period: 14
+
+    # Volume analysis
+    volume_ma_period: 20
+
+    # Signal filtering
+    min_confidence: 0.55  # Lowered from 0.65 to allow more trades with new boosters
+    min_data_points: 50  # Minimum bars needed
+
+    # Market Condition Filters - CRITICAL for ultra scalping success
+    market_filters:
+      # Volatility Filter - Avoid ranging or news-driven volatile markets
+      volatility_filter:
+        enabled: true
+        atr_min_ratio: 0.7  # Don't trade if ATR < 70% of 20-period average (too quiet/ranging)
+        atr_max_ratio: 1.5  # Don't trade if ATR > 150% of average (news event/unusual volatility)
+
+      # Spread Filter - Ultra scalping is very sensitive to spreads
+      spread_filter:
+        enabled: true
+        max_spread_pips: 1.2  # Maximum 1.2 pip spread (ICMarkets typically 0.1-0.6 pips)
+        max_spread_atr_pct: 0.3  # Spread shouldn't exceed 30% of ATR
+
+      # Session Filter - Only trade during high liquidity sessions
+      session_filter:
+        enabled: true
+        allowed_sessions: ['london', 'ny', 'overlap']  # Best for EUR/USD
+        # London: 08:00-16:00 UTC
+        # NY: 13:00-21:00 UTC
+        # Overlap: 13:00-16:00 UTC (highest liquidity)
+
+      # Trend Strength Filter - Avoid choppy/sideways markets
+      trend_filter:
+        enabled: true
+        min_strength: 0.2  # Lowered from 0.3 - ADX and slope handle trend quality now
+
+      # Rollover Filter - Avoid trading during spread widening period
+      rollover_filter:
+        enabled: true
+        start_hour: 21  # 21:00 UTC - daily rollover start
+        end_hour: 22    # 22:00 UTC - daily rollover end
+
+  # Backup strategies (optional)
+  sma_crossover:
+    fast_period: 20
+    slow_period: 200
+    timeframe: "H4"
+
+  enhanced_multi:
+    timeframe: "H1"
+    sma_fast: 10
+    sma_slow: 20
+    sma_trend: 50
+    rsi_period: 14
+    rsi_overbought: 70
+    rsi_oversold: 30
+    bb_period: 20
+    bb_std: 2.0
+    macd_fast: 12
+    macd_slow: 26
+    macd_signal: 9
+    atr_period: 14
+
+# Backtesting
+backtest:
+  start_date: "2024-01-01"
+  end_date: "2025-01-15"
+  initial_balance: 10000
+  commission: 0.00007  # 0.7 pip spread for EURUSD
+  optimization:
+    enabled: false
+    parameter_ranges:
+      ema_fast: [3, 5, 8]
+      ema_medium: [10, 13, 15]
+      rsi_period: [7, 9, 12]
+
+# Logging & Monitoring
+logging:
+  level: "INFO"  # Options: DEBUG, INFO, WARNING, ERROR
+  log_to_file: true
+  log_file: "logs/ultra_scalping_bot.log"
+  log_trades: true
+  trade_log_file: "logs/scalping_trades.log"
+
+# Notifications (Optional but recommended for scalping)
+notifications:
+  telegram:
+    enabled: false
+    bot_token: "YOUR_TELEGRAM_BOT_TOKEN"
+    chat_id: "YOUR_CHAT_ID"
+
+  email:
+    enabled: false
+    smtp_server: "smtp.gmail.com"
+    smtp_port: 587
+    sender_email: "your_email@gmail.com"
+    sender_password: "your_app_password"
+    recipient_email: "your_email@gmail.com"
+
+# Bot Behavior - FAST SCANNING FOR SCALPING
+bot:
+  scan_interval: 5  # Scan every 5 seconds for M1 scalping (very frequent)
+  heartbeat_interval: 300  # Heartbeat every 5 minutes
+  auto_restart: true  # Auto-reconnect on connection loss
+  max_reconnect_attempts: 10  # More attempts for scalping bot
+
+# MongoDB Database (Optional - for trade history and dashboard)
+database:
+  enabled: true  # ENABLED - Database logging active
+  connection_string: "mongodb://localhost:27017"  # MongoDB connection string
+  database_name: "mt5_trading_bot"  # Database name
+  log_all_signals: false  # If true, logs all signals (not just trades)
+  log_equity_interval: 300  # Log equity snapshot every 5 minutes (in seconds)
+
+# SCALPING BEST PRACTICES:
+# 1. Always test on DEMO account first for at least 1 week
+# 2. Use broker with low spreads (< 1 pip for EURUSD)
+# 3. Ensure stable, low-latency internet connection
+# 4. Consider VPS hosting near broker servers
+# 5. Monitor during first few hours of live trading
+# 6. Start with minimum risk (0.5% or less)
+# 7. Only trade during high liquidity hours (London/NY overlap is best)
+# 8. Be prepared to stop the bot if market conditions change
+
+# MongoDB Setup Instructions:
+# 1. Install MongoDB: https://www.mongodb.com/try/download/community
+# 2. Install pymongo: pip install pymongo
+# 3. Set database.enabled: true
+# 4. Bot will automatically start logging trades to database
+# 5. Use MongoDB Compass to view data: https://www.mongodb.com/products/compass
