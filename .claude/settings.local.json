@@ -25,7 +25,14 @@
       "Bash(dir:*)",
       "Bash(git init:*)",
       "Bash(gh auth status:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git remote add:*)",
+      "Bash(git branch:*)",
+      "Bash(git push:*)",
+      "Bash(del \"C:\\Users\\Admin\\Projects\\SinfoloBot\\run_bt.py\" \"C:\\Users\\Admin\\Projects\\SinfoloBot\\run_prop_firm_bt.py\")",
+      "Bash(cat:*)",
+      "Bash(python -c:*)"
     ],
     "deny": [],
     "ask": []

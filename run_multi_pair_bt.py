@@ -12,6 +12,8 @@ from core.risk_manager import RiskManager
 import logging
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
+from matplotlib.gridspec import GridSpec
 
 # Setup logging
 logging.basicConfig(
@@ -120,6 +122,118 @@ def run_single_pair_backtest(symbol, timeframe, config, years=1):
     results = backtest.run(data, symbol_dict)
 
     return results
+
+
+def plot_backtest_results(results):
+    """
+    Plot backtest results: Balance vs Time, Drawdown vs Time, Max Win/Loss
+    """
+    if not results or 'trades' not in results:
+        print("No results to plot")
+        return
+
+    df_trades = pd.DataFrame(results['trades'])
+    if df_trades.empty:
+        print("No trades to plot")
+        return
+
+    initial_balance = results['combined']['initial_balance']
+
+    # Calculate equity curve
+    df_trades = df_trades.sort_values('exit_time')
+    df_trades['cumulative_profit'] = df_trades['profit'].cumsum()
+    df_trades['balance'] = initial_balance + df_trades['cumulative_profit']
+
+    # Calculate drawdown
+    df_trades['peak'] = df_trades['balance'].cummax()
+    df_trades['drawdown_pct'] = (df_trades['balance'] - df_trades['peak']) / df_trades['peak'] * 100
+
+    # Create figure with subplots
+    fig = plt.figure(figsize=(14, 10))
+    gs = GridSpec(3, 2, figure=fig, height_ratios=[2, 1, 1])
+
+    # Plot 1: Balance vs Time (top, full width)
+    ax1 = fig.add_subplot(gs[0, :])
+    ax1.plot(df_trades['exit_time'], df_trades['balance'], 'b-', linewidth=1.5, label='Balance')
+    ax1.axhline(y=initial_balance, color='gray', linestyle='--', alpha=0.7, label=f'Initial: ${initial_balance:,.0f}')
+    ax1.fill_between(df_trades['exit_time'], initial_balance, df_trades['balance'],
+                     where=df_trades['balance'] >= initial_balance, alpha=0.3, color='green')
+    ax1.fill_between(df_trades['exit_time'], initial_balance, df_trades['balance'],
+                     where=df_trades['balance'] < initial_balance, alpha=0.3, color='red')
+    ax1.set_title('Account Balance Over Time', fontsize=12, fontweight='bold')
+    ax1.set_xlabel('Date')
+    ax1.set_ylabel('Balance ($)')
+    ax1.legend(loc='upper left')
+    ax1.grid(True, alpha=0.3)
+
+    # Plot 2: Drawdown vs Time (middle left)
+    ax2 = fig.add_subplot(gs[1, 0])
+    ax2.fill_between(df_trades['exit_time'], 0, df_trades['drawdown_pct'],
+                     color='red', alpha=0.5)
+    ax2.plot(df_trades['exit_time'], df_trades['drawdown_pct'], 'r-', linewidth=1)
+    ax2.set_title('Drawdown Over Time', fontsize=10, fontweight='bold')
+    ax2.set_xlabel('Date')
+    ax2.set_ylabel('Drawdown (%)')
+    ax2.grid(True, alpha=0.3)
+    max_dd = df_trades['drawdown_pct'].min()
+    ax2.axhline(y=max_dd, color='darkred', linestyle='--', alpha=0.7,
+                label=f'Max DD: {max_dd:.2f}%')
+    ax2.legend(loc='lower left')
+
+    # Plot 3: Trade Distribution (middle right)
+    ax3 = fig.add_subplot(gs[1, 1])
+    wins = df_trades[df_trades['profit'] > 0]['profit']
+    losses = df_trades[df_trades['profit'] < 0]['profit']
+    ax3.hist(wins, bins=20, alpha=0.7, color='green', label=f'Wins ({len(wins)})')
+    ax3.hist(losses, bins=20, alpha=0.7, color='red', label=f'Losses ({len(losses)})')
+    ax3.axvline(x=0, color='black', linestyle='-', linewidth=1)
+    ax3.set_title('Trade Profit Distribution', fontsize=10, fontweight='bold')
+    ax3.set_xlabel('Profit ($)')
+    ax3.set_ylabel('Count')
+    ax3.legend()
+    ax3.grid(True, alpha=0.3)
+
+    # Plot 4: Max Win/Loss Stats (bottom left)
+    ax4 = fig.add_subplot(gs[2, 0])
+    max_win = df_trades['profit'].max()
+    max_loss = df_trades['profit'].min()
+    avg_win = wins.mean() if len(wins) > 0 else 0
+    avg_loss = losses.mean() if len(losses) > 0 else 0
+
+    categories = ['Max Win', 'Avg Win', 'Avg Loss', 'Max Loss']
+    values = [max_win, avg_win, avg_loss, max_loss]
+    colors = ['darkgreen', 'green', 'red', 'darkred']
+
+    bars = ax4.barh(categories, values, color=colors, alpha=0.7)
+    ax4.axvline(x=0, color='black', linestyle='-', linewidth=1)
+    ax4.set_title('Win/Loss Statistics', fontsize=10, fontweight='bold')
+    ax4.set_xlabel('Profit ($)')
+
+    # Add value labels on bars
+    for bar, val in zip(bars, values):
+        x_pos = val + (10 if val >= 0 else -10)
+        ax4.text(x_pos, bar.get_y() + bar.get_height()/2, f'${val:.2f}',
+                va='center', ha='left' if val >= 0 else 'right', fontsize=9)
+
+    # Plot 5: Profit by Pair (bottom right)
+    ax5 = fig.add_subplot(gs[2, 1])
+    pair_profits = df_trades.groupby('symbol')['profit'].sum().sort_values()
+    colors = ['green' if p > 0 else 'red' for p in pair_profits.values]
+    bars = ax5.barh(pair_profits.index, pair_profits.values, color=colors, alpha=0.7)
+    ax5.axvline(x=0, color='black', linestyle='-', linewidth=1)
+    ax5.set_title('Total Profit by Pair', fontsize=10, fontweight='bold')
+    ax5.set_xlabel('Total Profit ($)')
+
+    # Add value labels
+    for bar, val in zip(bars, pair_profits.values):
+        x_pos = val + (5 if val >= 0 else -5)
+        ax5.text(x_pos, bar.get_y() + bar.get_height()/2, f'${val:.0f}',
+                va='center', ha='left' if val >= 0 else 'right', fontsize=9)
+
+    plt.tight_layout()
+    plt.savefig('backtest_results.png', dpi=150, bbox_inches='tight')
+    plt.show()
+    print("\nPlot saved to 'backtest_results.png'")
 
 
 def run_multi_pair_backtest(years=1):
@@ -324,18 +438,23 @@ if __name__ == "__main__":
     except:
         choice = "1"
 
+    results = None
     if choice == "1":
-        run_multi_pair_backtest(1)
+        results = run_multi_pair_backtest(1)
     elif choice == "2":
-        run_multi_pair_backtest(0.5)
+        results = run_multi_pair_backtest(0.5)
     elif choice == "3":
-        run_multi_pair_backtest(0.25)
+        results = run_multi_pair_backtest(0.25)
     elif choice == "4":
         try:
             years = float(input("Years (default 1): ").strip() or "1")
-            run_multi_pair_backtest(years)
+            results = run_multi_pair_backtest(years)
         except:
             print("Invalid input, running default...")
-            run_multi_pair_backtest(1)
+            results = run_multi_pair_backtest(1)
     else:
-        run_multi_pair_backtest(1)
+        results = run_multi_pair_backtest(1)
+
+    # Plot results if available
+    if results:
+        plot_backtest_results(results)
