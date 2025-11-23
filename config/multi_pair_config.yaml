@@ -11,31 +11,32 @@ mt5:
 # Trading Parameters
 trading:
   # Multi-Pair Setup - Each pair with optimal timeframe
+  # Using H1 for better signal quality and lower drawdown
   pairs:
     XAUUSD:
       enabled: true
-      timeframe: "M5"
+      timeframe: "H1"
       expected_return: 0.0
       win_rate: 0.0
       profit_factor: 0.0
 
     US30:
       enabled: true
-      timeframe: "M5"
+      timeframe: "H1"
       expected_return: 0.0
       win_rate: 0.0
       profit_factor: 0.0
 
     US100:
       enabled: true
-      timeframe: "M5"
+      timeframe: "H1"
       expected_return: 0.0
       win_rate: 0.0
       profit_factor: 0.0
 
     US500:
       enabled: true
-      timeframe: "M5"
+      timeframe: "H1"
       expected_return: 0.0
       win_rate: 0.0
       profit_factor: 0.0
@@ -153,82 +154,83 @@ risk:
   max_total_exposure: 4.0  # Max 4% of account in positions
 
 # Strategy Parameters - Per Pair Optimization
+# Conservative settings for higher win rate and lower drawdown
 strategies:
-  # XAUUSD Settings (M5) - Gold
+  # XAUUSD Settings (H1) - Gold - CONSERVATIVE
   XAUUSD:
-    timeframe: "M5"
+    timeframe: "H1"
     ema_period: 50
     rsi_period: 14
-    rsi_buy_threshold: 35
-    rsi_sell_threshold: 65
-    use_rsi_exit: false
+    rsi_buy_threshold: 30       # Stricter - only buy when truly oversold
+    rsi_sell_threshold: 70      # Stricter - only sell when truly overbought
+    use_rsi_exit: true          # Exit on RSI extremes
     atr_period: 14
     adx_period: 14
-    min_adx: 20
+    min_adx: 25                 # Require stronger trend
     risk_reward: 2.0
-    sl_atr_multiplier: 1.5
-    min_atr: 0.5            # Gold has higher ATR
-    min_ema_distance: 0.3
-    min_confidence: 0.65
+    sl_atr_multiplier: 2.0      # Wider SL for less noise hits
+    min_atr: 1.0                # Gold H1 ATR filter
+    min_ema_distance: 0.5       # Require clear pullback
+    min_confidence: 0.75        # Higher confidence required
     min_data_points: 60
-    require_rsi_momentum: false
+    require_rsi_momentum: true  # Require RSI confirmation
 
-  # US30 Settings (M5) - Dow Jones
+  # US30 Settings (H1) - Dow Jones - CONSERVATIVE
   US30:
-    timeframe: "M5"
+    timeframe: "H1"
     ema_period: 50
     rsi_period: 14
-    rsi_buy_threshold: 35
-    rsi_sell_threshold: 65
-    use_rsi_exit: false
+    rsi_buy_threshold: 30
+    rsi_sell_threshold: 70
+    use_rsi_exit: true
     atr_period: 14
     adx_period: 14
-    min_adx: 20
+    min_adx: 25
     risk_reward: 2.0
-    sl_atr_multiplier: 1.5
-    min_atr: 20             # Indices have higher ATR
-    min_ema_distance: 15
-    min_confidence: 0.65
+    sl_atr_multiplier: 2.0
+    min_atr: 50                 # H1 ATR for US30
+    min_ema_distance: 30
+    min_confidence: 0.75
     min_data_points: 60
-    require_rsi_momentum: false
+    require_rsi_momentum: true
 
-  # US100 Settings (M5) - Nasdaq
+  # US100 Settings (H1) - Nasdaq - CONSERVATIVE
   US100:
-    timeframe: "M5"
+    timeframe: "H1"
     ema_period: 50
     rsi_period: 14
-    rsi_buy_threshold: 35
-    rsi_sell_threshold: 65
-    use_rsi_exit: false
+    rsi_buy_threshold: 30
+    rsi_sell_threshold: 70
+    use_rsi_exit: true
     atr_period: 14
     adx_period: 14
-    min_adx: 20
+    min_adx: 25
     risk_reward: 2.0
-    sl_atr_multiplier: 1.5
-    min_atr: 30             # Nasdaq is volatile
-    min_ema_distance: 20
-    min_confidence: 0.65
+    sl_atr_multiplier: 2.0
+    min_atr: 80                 # H1 ATR for Nasdaq
+    min_ema_distance: 50
+    min_confidence: 0.75
     min_data_points: 60
-    require_rsi_momentum: false
+    require_rsi_momentum: true
 
-  # US500 Settings (M5) - S&P 500
+  # US500 Settings (H1) - S&P 500 - CONSERVATIVE
   US500:
-    timeframe: "M5"
+    timeframe: "H1"
     ema_period: 50
     rsi_period: 14
-    rsi_buy_threshold: 35
-    rsi_sell_threshold: 65
-    use_rsi_exit: false
+    rsi_buy_threshold: 30
+    rsi_sell_threshold: 70
+    use_rsi_exit: true
     atr_period: 14
     adx_period: 14
-    min_adx: 20
+    min_adx: 25
     risk_reward: 2.0
-    sl_atr_multiplier: 1.5
-    min_atr: 5              # S&P has lower ATR than others
-    min_ema_distance: 3
-    min_confidence: 0.65
+    sl_atr_multiplier: 2.0
+    min_atr: 10                 # H1 ATR for S&P
+    min_ema_distance: 6
+    min_confidence: 0.75
     min_data_points: 60
-    require_rsi_momentum: false
+    require_rsi_momentum: true
 
   # USDJPY Settings (M5) - Best performer - AGGRESSIVE
   USDJPY:
