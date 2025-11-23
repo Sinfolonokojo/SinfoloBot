@@ -22,7 +22,8 @@ class BacktestEngine:
     """Backtesting engine for strategy evaluation"""
 
     def __init__(self, strategy, risk_manager, initial_balance=10000, commission=0.00007,
-                 slippage_pips=0.3, use_spread=True, avg_spread_pips=0.5):
+                 slippage_pips=0.3, use_spread=True, avg_spread_pips=0.5,
+                 max_daily_loss_pct=4.0, max_total_drawdown_pct=10.0):
         """
         Initialize backtest engine
 
@@ -34,6 +35,8 @@ class BacktestEngine:
             slippage_pips: Slippage in pips per trade (default: 0.3 pips)
             use_spread: Apply bid/ask spread simulation (default: True)
             avg_spread_pips: Average spread in pips (default: 0.5 for EUR/USD)
+            max_daily_loss_pct: Maximum daily loss percentage (default: 4.0%)
+            max_total_drawdown_pct: Maximum total drawdown percentage (default: 10.0%)
         """
         self.strategy = strategy
         self.risk_manager = risk_manager
@@ -42,6 +45,8 @@ class BacktestEngine:
         self.slippage_pips = slippage_pips
         self.use_spread = use_spread
         self.avg_spread_pips = avg_spread_pips
+        self.max_daily_loss_pct = max_daily_loss_pct
+        self.max_total_drawdown_pct = max_total_drawdown_pct
         self.logger = logging.getLogger(__name__)
 
         # Results tracking
@@ -54,6 +59,52 @@ class BacktestEngine:
         self.trades = []
         self.equity_curve = []
         self.current_position = None
+
+        # Risk limit tracking
+        self.daily_start_balance = self.initial_balance
+        self.current_day = None
+        self.trading_halted = False
+        self.halt_reason = ""
+        self.peak_balance = self.initial_balance
+
+    def _check_risk_limits(self, current_time):
+        """
+        Check if risk limits have been breached
+
+        Args:
+            current_time: Current bar timestamp
+
+        Returns:
+            tuple: (can_trade: bool, reason: str)
+        """
+        # Check if trading was permanently halted (max drawdown hit)
+        if self.trading_halted:
+            return False, self.halt_reason
+
+        # Update peak balance for drawdown calculation
+        if self.balance > self.peak_balance:
+            self.peak_balance = self.balance
+
+        # Check total drawdown from peak
+        total_drawdown_pct = ((self.balance - self.peak_balance) / self.peak_balance) * 100
+        if total_drawdown_pct <= -self.max_total_drawdown_pct:
+            self.trading_halted = True
+            self.halt_reason = f"Max total drawdown hit: {total_drawdown_pct:.2f}% (limit: -{self.max_total_drawdown_pct}%)"
+            self.logger.warning(self.halt_reason)
+            return False, self.halt_reason
+
+        # Check for new day and reset daily tracking
+        current_date = current_time.date() if hasattr(current_time, 'date') else current_time
+        if self.current_day != current_date:
+            self.current_day = current_date
+            self.daily_start_balance = self.balance
+
+        # Check daily loss limit
+        daily_loss_pct = ((self.balance - self.daily_start_balance) / self.daily_start_balance) * 100
+        if daily_loss_pct <= -self.max_daily_loss_pct:
+            return False, f"Daily loss limit hit: {daily_loss_pct:.2f}% (limit: -{self.max_daily_loss_pct}%)"
+
+        return True, ""
 
     def run(self, data, symbol_info):
         """
@@ -106,16 +157,20 @@ class BacktestEngine:
 
             # Check for entry signals if no position
             if not self.current_position:
-                signal = self.strategy.generate_signals(current_data)
+                # Check risk limits before allowing new trades
+                can_trade, limit_reason = self._check_risk_limits(current_time)
 
-                if signal['action'] == 'BUY' or signal['action'] == 'SELL':
-                    self._open_position(
-                        signal,
-                        current_price,
-                        current_time,
-                        current_bar.get('ATR', current_price * 0.01),
-                        symbol_info
-                    )
+                if can_trade:
+                    signal = self.strategy.generate_signals(current_data)
+
+                    if signal['action'] == 'BUY' or signal['action'] == 'SELL':
+                        self._open_position(
+                            signal,
+                            current_price,
+                            current_time,
+                            current_bar.get('ATR', current_price * 0.01),
+                            symbol_info
+                        )
 
             # Record equity
             self.equity_curve.append({
@@ -480,7 +535,11 @@ class BacktestEngine:
             # Other
             'avg_trade_duration': df_trades['duration'].mean(),
             'trades': df_trades.to_dict('records'),
-            'equity_curve': df_equity.to_dict('records')
+            'equity_curve': df_equity.to_dict('records'),
+
+            # Risk limit info
+            'trading_halted': self.trading_halted,
+            'halt_reason': self.halt_reason if self.trading_halted else ""
         }
 
     def plot_results(self, results, save_path=None):
@@ -724,4 +783,8 @@ class BacktestEngine:
         print(f"  Expectancy: {results['expectancy']:.2f}")
         print(f"  Max Consecutive Wins: {results['max_consecutive_wins']}")
         print(f"  Max Consecutive Losses: {results['max_consecutive_losses']}")
+
+        # Show risk limit status
+        if results.get('trading_halted'):
+            print(f"\n⚠️  TRADING HALTED: {results['halt_reason']}")
         print("=" * 70 + "\n")

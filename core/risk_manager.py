@@ -67,12 +67,6 @@ class RiskManager:
 
             lot_size = max(min_lot, min(lot_size, max_lot))
 
-            self.logger.info(
-                f"Position sizing: Balance=${account_balance:.2f}, "
-                f"Risk={self.risk_per_trade}%, SL={stop_loss_pips} pips -> "
-                f"Lot size={lot_size:.2f}"
-            )
-
             return lot_size
 
         except Exception as e:

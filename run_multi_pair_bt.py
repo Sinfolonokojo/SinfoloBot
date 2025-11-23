@@ -106,8 +106,11 @@ def run_single_pair_backtest(symbol, timeframe, config, years=1):
     risk_config = config['risk'].copy()
     risk_manager = RiskManager(risk_config)
 
-    # Create backtest engine
+    # Create backtest engine with risk limits from config
     initial_balance = config['backtest']['initial_balance']
+    max_daily_loss = config['risk'].get('max_daily_loss', {}).get('percentage', 4.0)
+    max_total_dd = config['risk'].get('max_total_drawdown', {}).get('percentage', 10.0)
+
     backtest = BacktestEngine(
         strategy,
         risk_manager,
@@ -115,7 +118,9 @@ def run_single_pair_backtest(symbol, timeframe, config, years=1):
         commission=0.00007,
         slippage_pips=0.3,
         use_spread=True,
-        avg_spread_pips=0.5
+        avg_spread_pips=0.5,
+        max_daily_loss_pct=max_daily_loss,
+        max_total_drawdown_pct=max_total_dd
     )
 
     # Run backtest
@@ -300,6 +305,10 @@ def run_multi_pair_backtest(years=1):
             print(f"  Trades: {results['num_trades']}")
             print(f"  Profit Factor: {results['profit_factor']:.2f}")
             print(f"  Max Drawdown: {results['max_drawdown']:.2f}%")
+
+            # Check if trading was halted due to risk limits
+            if results.get('trading_halted'):
+                print(f"  ⚠️  HALTED: {results['halt_reason']}")
         else:
             print(f"\n{symbol}: No trades or error")
             all_results[symbol] = None
@@ -424,7 +433,7 @@ def run_multi_pair_backtest(years=1):
 if __name__ == "__main__":
     print("\n" + "=" * 70)
     print("  MULTI-PAIR STRATEGY BACKTESTER")
-    print("  Pairs: USDJPY (M5), EURUSD (H1), AUDUSD (M5)")
+    print("  Pairs: XAUUSD, US30, US100, US500")
     print("=" * 70 + "\n")
 
     print("Options:")
