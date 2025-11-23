@@ -364,11 +364,11 @@ def main():
 
     # Settings - Choose symbol
     print("\nSelect symbol:")
-    print("1. XAUUSD (Gold)")
-    print("2. US30 (Dow Jones)")
-    print("3. US100 (Nasdaq)")
-    print("4. US500 (S&P 500)")
-    print("5. EURUSD")
+    print("1. EURUSD")
+    print("2. GBPUSD")
+    print("3. USDJPY")
+    print("4. AUDUSD")
+    print("5. USDCAD")
 
     try:
         sym_choice = input("\nSelect symbol (1-5): ").strip()
@@ -376,14 +376,14 @@ def main():
         sym_choice = "1"
 
     symbol_map = {
-        "1": ("XAUUSD", "historic_data_xauusd"),
-        "2": ("US30", "historic_data_us30"),
-        "3": ("US100", "historic_data_us100"),
-        "4": ("US500", "historic_data_us500"),
-        "5": ("EURUSD", "historic_data_forex_eurusd"),
+        "1": ("EURUSD", "historic_data_forex_eurusd"),
+        "2": ("GBPUSD", "historic_data_forex_gbpusd"),
+        "3": ("USDJPY", "historic_data_forex_usdjpy"),
+        "4": ("AUDUSD", "historic_data_forex_audusd"),
+        "5": ("USDCAD", "historic_data_forex_usdcad"),
     }
 
-    symbol, data_folder = symbol_map.get(sym_choice, ("XAUUSD", "historic_data_xauusd"))
+    symbol, data_folder = symbol_map.get(sym_choice, ("EURUSD", "historic_data_forex_eurusd"))
 
     print(f"\nSymbol: {symbol}")
     print(f"Data folder: {data_folder}")
