@@ -12,6 +12,8 @@ from core.risk_manager import RiskManager
 import logging
 import numpy as np
 import pandas as pd
+import matplotlib
+matplotlib.use('Agg')  # Use non-interactive backend
 import matplotlib.pyplot as plt
 from matplotlib.gridspec import GridSpec
 
@@ -91,6 +93,7 @@ def run_single_pair_backtest(symbol, timeframe, config, years=1):
         'volume_step': symbol_info.volume_step,
         'point': symbol_info.point,
         'digits': symbol_info.digits,
+        'trade_contract_size': symbol_info.trade_contract_size,
     }
 
     # Get pair-specific strategy config
@@ -130,9 +133,6 @@ def run_single_pair_backtest(symbol, timeframe, config, years=1):
 
 
 def plot_backtest_results(results):
-    """
-    Plot backtest results: Balance vs Time, Drawdown vs Time, Max Win/Loss
-    """
     if not results or 'trades' not in results:
         print("No results to plot")
         return
@@ -237,7 +237,7 @@ def plot_backtest_results(results):
 
     plt.tight_layout()
     plt.savefig('backtest_results.png', dpi=150, bbox_inches='tight')
-    plt.show()
+    # plt.show()  # Disabled to avoid blocking
     print("\nPlot saved to 'backtest_results.png'")
 
 
@@ -308,7 +308,7 @@ def run_multi_pair_backtest(years=1):
 
             # Check if trading was halted due to risk limits
             if results.get('trading_halted'):
-                print(f"  ⚠️  HALTED: {results['halt_reason']}")
+                print(f"  WARNING - HALTED: {results['halt_reason']}")
         else:
             print(f"\n{symbol}: No trades or error")
             all_results[symbol] = None
@@ -401,6 +401,7 @@ def run_multi_pair_backtest(years=1):
         print("=" * 70)
 
         # Return combined results
+        mt5.shutdown()
         return {
             'pairs_tested': list(all_results.keys()),
             'individual_results': all_results,
@@ -425,45 +426,9 @@ def run_multi_pair_backtest(years=1):
 
     else:
         print("\nNo trades executed across any pairs")
+        mt5.shutdown()
         return None
 
-    mt5.shutdown()
-
-
 if __name__ == "__main__":
-    print("\n" + "=" * 70)
-    print("  MULTI-PAIR STRATEGY BACKTESTER")
-    print("  Pairs: XAUUSD, US30, US100, US500")
-    print("=" * 70 + "\n")
-
-    print("Options:")
-    print("1. Backtest 1 year (recommended)")
-    print("2. Backtest 6 months")
-    print("3. Backtest 3 months")
-    print("4. Custom period")
-
-    try:
-        choice = input("\nSelect option (1-4): ").strip()
-    except:
-        choice = "1"
-
-    results = None
-    if choice == "1":
-        results = run_multi_pair_backtest(1)
-    elif choice == "2":
-        results = run_multi_pair_backtest(0.5)
-    elif choice == "3":
-        results = run_multi_pair_backtest(0.25)
-    elif choice == "4":
-        try:
-            years = float(input("Years (default 1): ").strip() or "1")
-            results = run_multi_pair_backtest(years)
-        except:
-            print("Invalid input, running default...")
-            results = run_multi_pair_backtest(1)
-    else:
-        results = run_multi_pair_backtest(1)
-
-    # Plot results if available
-    if results:
-        plot_backtest_results(results)
+    results = run_multi_pair_backtest(1)
+    plot_backtest_results(results)

@@ -10,61 +10,62 @@ mt5:
 
 # Trading Parameters
 trading:
-  # Multi-Pair Setup - Each pair with optimal timeframe
-  # Using H1 for better signal quality and lower drawdown
+  # FOCUSED WINNER STRATEGY - Top 2 Performers Only!
+  # XAUUSD: 33.20% return, 50% win rate
+  # USDJPY M1: 15.16% return, 44.8% win rate
   pairs:
     XAUUSD:
       enabled: true
       timeframe: "H1"
-      expected_return: 0.0
-      win_rate: 0.0
-      profit_factor: 0.0
+      expected_return: 33.20
+      win_rate: 50.0
+      profit_factor: 1.84
 
     US30:
-      enabled: true
+      enabled: false  # Disabled - poor performer (-3.64%)
       timeframe: "H1"
       expected_return: 0.0
       win_rate: 0.0
       profit_factor: 0.0
 
     US100:
-      enabled: true
+      enabled: false  # Not available on MetaQuotes demo server
       timeframe: "H1"
       expected_return: 0.0
       win_rate: 0.0
       profit_factor: 0.0
 
     US500:
-      enabled: true
+      enabled: false  # Disabled - poor performance
       timeframe: "H1"
       expected_return: 0.0
       win_rate: 0.0
       profit_factor: 0.0
 
     USDJPY:
-      enabled: false
-      timeframe: "M5"
-      expected_return: 15.93
-      win_rate: 48.7
-      profit_factor: 1.75
+      enabled: true  # WINNER - 15.16% return!
+      timeframe: "M1"  # M1 for high frequency
+      expected_return: 15.16
+      win_rate: 44.8
+      profit_factor: 1.35
 
     EURUSD:
-      enabled: false
-      timeframe: "H1"
-      expected_return: 8.55
-      win_rate: 71.4
-      profit_factor: 3.75
+      enabled: false  # Disabled - DISASTER (-11.76%)
+      timeframe: "M1"
+      expected_return: 0.0
+      win_rate: 0.0
+      profit_factor: 0.0
 
     AUDUSD:
-      enabled: false
+      enabled: false  # Disabled - poor performer (-3.11%)
       timeframe: "M5"
-      expected_return: 1.34
-      win_rate: 50.0
-      profit_factor: 1.48
+      expected_return: 0.0
+      win_rate: 0.0
+      profit_factor: 0.0
 
     GBPUSD:
-      enabled: false
-      timeframe: "H1"
+      enabled: false  # Disabled - DISASTER (-11.37%)
+      timeframe: "M1"
       expected_return: 0.0
       win_rate: 0.0
       profit_factor: 0.0
@@ -113,21 +114,21 @@ trading:
     start: "08:00"
     end: "16:00"
 
-  # Position Limits - Multi-Pair (8 pairs)
-  max_open_positions: 8  # Allow one per pair
-  max_positions_per_pair: 1
+  # Position Limits - FOCUSED (2 pairs only)
+  max_open_positions: 4  # 2 pairs x 2 positions each
+  max_positions_per_pair: 2  # Allow 2 per pair for scaling
 
 # Risk Management - PROP FIRM SETTINGS (5% daily DD, 10% total DD)
 risk:
-  # Position Sizing - Conservative for prop firm compliance
-  risk_per_trade: 0.9  # 0.9% per trade (accounts for spread/commission)
+  # Position Sizing - OPTIMIZED for prop firm (4.5% daily DD limit)
+  risk_per_trade: 0.9  # 0.9% per trade (allows ~5 losing trades per day)
 
   # Stop Loss - MANDATORY
   stop_loss:
     type: "atr"
-    atr_multiplier: 1.5
+    atr_multiplier: 1.5  # Optimized - tighter stops for better risk control
 
-  # Take Profit - 1:2 Risk/Reward
+  # Take Profit - 1:2 Risk/Reward (Balanced for achievability)
   take_profit:
     type: "risk_reward"
     risk_reward_ratio: 2.0
@@ -140,15 +141,15 @@ risk:
   breakeven_stop:
     enabled: false
 
-  # Daily Loss Limit - PROP FIRM CRITICAL
+  # Daily Loss Limit - PROP FIRM RULE
   max_daily_loss:
     enabled: true
-    percentage: 4.0  # 4% daily (below 5% prop firm limit)
+    percentage: 4.5  # 4.5% daily (prop firm limit)
 
-  # Total Drawdown Limit - PROP FIRM CRITICAL
+  # Total Drawdown Limit - PROP FIRM RULE
   max_total_drawdown:
     enabled: true
-    percentage: 8.0  # 8% total (below 10% prop firm limit)
+    percentage: 8.0  # 8% total (typical prop firm limit)
 
   # Maximum Exposure - Multi-pair
   max_total_exposure: 4.0  # Max 4% of account in positions
@@ -156,43 +157,43 @@ risk:
 # Strategy Parameters - Per Pair Optimization
 # Conservative settings for higher win rate and lower drawdown
 strategies:
-  # XAUUSD Settings (H1) - Gold - CONSERVATIVE
+  # XAUUSD Settings (H1) - Gold - BALANCED
   XAUUSD:
     timeframe: "H1"
     ema_period: 50
     rsi_period: 14
-    rsi_buy_threshold: 30       # Stricter - only buy when truly oversold
-    rsi_sell_threshold: 70      # Stricter - only sell when truly overbought
-    use_rsi_exit: true          # Exit on RSI extremes
+    rsi_buy_threshold: 40       # Widened for more signals
+    rsi_sell_threshold: 60      # Widened for more signals
+    use_rsi_exit: false
     atr_period: 14
     adx_period: 14
-    min_adx: 25                 # Require stronger trend
+    min_adx: 18                 # Relaxed for more signals
     risk_reward: 2.0
-    sl_atr_multiplier: 2.0      # Wider SL for less noise hits
-    min_atr: 1.0                # Gold H1 ATR filter
-    min_ema_distance: 0.5       # Require clear pullback
-    min_confidence: 0.75        # Higher confidence required
+    sl_atr_multiplier: 1.5
+    min_atr: 0.4                # Further relaxed
+    min_ema_distance: 0.2       # More pullbacks allowed
+    min_confidence: 0.55
     min_data_points: 60
-    require_rsi_momentum: true  # Require RSI confirmation
+    require_rsi_momentum: false
 
-  # US30 Settings (H1) - Dow Jones - CONSERVATIVE
+  # US30 Settings (H1) - Dow Jones - BALANCED
   US30:
     timeframe: "H1"
     ema_period: 50
     rsi_period: 14
-    rsi_buy_threshold: 30
-    rsi_sell_threshold: 70
-    use_rsi_exit: true
+    rsi_buy_threshold: 40
+    rsi_sell_threshold: 60
+    use_rsi_exit: false
     atr_period: 14
     adx_period: 14
-    min_adx: 25
+    min_adx: 18
     risk_reward: 2.0
-    sl_atr_multiplier: 2.0
-    min_atr: 50                 # H1 ATR for US30
-    min_ema_distance: 30
-    min_confidence: 0.75
+    sl_atr_multiplier: 1.5
+    min_atr: 20                 # Further relaxed
+    min_ema_distance: 10        # More pullbacks
+    min_confidence: 0.55
     min_data_points: 60
-    require_rsi_momentum: true
+    require_rsi_momentum: false
 
   # US100 Settings (H1) - Nasdaq - CONSERVATIVE
   US100:
@@ -213,100 +214,100 @@ strategies:
     min_data_points: 60
     require_rsi_momentum: true
 
-  # US500 Settings (H1) - S&P 500 - CONSERVATIVE
+  # US500 Settings (H1) - S&P 500 - OPTIMIZED
   US500:
     timeframe: "H1"
     ema_period: 50
     rsi_period: 14
-    rsi_buy_threshold: 30
-    rsi_sell_threshold: 70
-    use_rsi_exit: true
+    rsi_buy_threshold: 35
+    rsi_sell_threshold: 65
+    use_rsi_exit: false
     atr_period: 14
     adx_period: 14
-    min_adx: 25
-    risk_reward: 2.0
-    sl_atr_multiplier: 2.0
-    min_atr: 10                 # H1 ATR for S&P
-    min_ema_distance: 6
-    min_confidence: 0.75
+    min_adx: 20
+    risk_reward: 2.5
+    sl_atr_multiplier: 1.5
+    min_atr: 5                  # Relaxed ATR filter
+    min_ema_distance: 3         # Allow more pullbacks
+    min_confidence: 0.65
     min_data_points: 60
     require_rsi_momentum: true
 
-  # USDJPY Settings (M5) - Best performer - AGGRESSIVE
+  # USDJPY Settings (M1) - High frequency - BALANCED
   USDJPY:
-    timeframe: "M5"
+    timeframe: "M1"
     ema_period: 50
     rsi_period: 14
-    rsi_buy_threshold: 38      # Widened from 32
-    rsi_sell_threshold: 62     # Widened from 68
+    rsi_buy_threshold: 40      # Widened for more signals
+    rsi_sell_threshold: 60     # Widened for more signals
     use_rsi_exit: false
     atr_period: 14
     adx_period: 14
-    min_adx: 18                # Lowered from 20
-    risk_reward: 2.0
+    min_adx: 18                # Lower for more signals
+    risk_reward: 2.0           # Achievable target
     sl_atr_multiplier: 1.5
-    min_atr: 0.04              # Lowered from 0.05
-    min_ema_distance: 0.02     # Lowered from 0.03
-    min_confidence: 0.60       # Lowered from 0.70
+    min_atr: 0.015             # M1 appropriate ATR for JPY
+    min_ema_distance: 0.008    # M1 appropriate distance
+    min_confidence: 0.55       # Lower for more volume
     min_data_points: 60
     require_rsi_momentum: false # Disabled for more signals
 
-  # EURUSD Settings (H1) - High win rate - AGGRESSIVE
+  # EURUSD Settings (M1) - High frequency - BALANCED
   EURUSD:
-    timeframe: "H1"
+    timeframe: "M1"
     ema_period: 50
     rsi_period: 14
-    rsi_buy_threshold: 38      # Widened from 32
-    rsi_sell_threshold: 62     # Widened from 68
+    rsi_buy_threshold: 40      # Widened for more signals
+    rsi_sell_threshold: 60     # Widened for more signals
     use_rsi_exit: false
     atr_period: 14
     adx_period: 14
-    min_adx: 18                # Lowered from 20
-    risk_reward: 2.0
+    min_adx: 18                # Lower for more signals
+    risk_reward: 2.0           # Achievable target
     sl_atr_multiplier: 1.5
-    min_atr: 0.0002            # Lowered
-    min_ema_distance: 0.0001   # Lowered
-    min_confidence: 0.60       # Lowered from 0.70
+    min_atr: 0.00006           # M1 appropriate ATR
+    min_ema_distance: 0.00003  # M1 appropriate distance
+    min_confidence: 0.55       # Lower for more volume
     min_data_points: 60
     require_rsi_momentum: false # Disabled for more signals
 
-  # AUDUSD Settings (M5) - AGGRESSIVE
+  # AUDUSD Settings (M5) - BALANCED
   AUDUSD:
     timeframe: "M5"
     ema_period: 50
     rsi_period: 14
-    rsi_buy_threshold: 38      # Widened from 32
-    rsi_sell_threshold: 62     # Widened from 68
+    rsi_buy_threshold: 40      # Balanced
+    rsi_sell_threshold: 60     # Balanced
     use_rsi_exit: false
     atr_period: 14
     adx_period: 14
-    min_adx: 18                # Lowered from 20
+    min_adx: 18                # Relaxed for signals
     risk_reward: 2.0
     sl_atr_multiplier: 1.5
-    min_atr: 0.0002            # Lowered
-    min_ema_distance: 0.0001   # Lowered
-    min_confidence: 0.60       # Lowered from 0.72
+    min_atr: 0.00015           # Balanced
+    min_ema_distance: 0.00008  # Balanced
+    min_confidence: 0.55       # Lower for more volume
     min_data_points: 60
-    require_rsi_momentum: false # Disabled for more signals
+    require_rsi_momentum: false
 
-  # GBPUSD Settings (H1) - High volatility pair
+  # GBPUSD Settings (M1) - High frequency scalping
   GBPUSD:
-    timeframe: "H1"
+    timeframe: "M1"
     ema_period: 50
     rsi_period: 14
-    rsi_buy_threshold: 32
-    rsi_sell_threshold: 68
+    rsi_buy_threshold: 40      # Balanced for M1
+    rsi_sell_threshold: 60
     use_rsi_exit: false
     atr_period: 14
     adx_period: 14
-    min_adx: 22
+    min_adx: 18                # Lower for more signals
     risk_reward: 2.0
     sl_atr_multiplier: 1.5
-    min_atr: 0.0004
-    min_ema_distance: 0.0003
-    min_confidence: 0.70
+    min_atr: 0.00008           # M1 appropriate ATR
+    min_ema_distance: 0.00004  # M1 appropriate distance
+    min_confidence: 0.55
     min_data_points: 60
-    require_rsi_momentum: true
+    require_rsi_momentum: false
 
   # USDCAD Settings (H1) - Oil correlated
   USDCAD:

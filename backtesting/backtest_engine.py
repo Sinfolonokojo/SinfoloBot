@@ -227,6 +227,9 @@ class BacktestEngine:
             sl_pips
         )
 
+        # Store contract size for profit calculations
+        self._current_contract_size = symbol_info.get('trade_contract_size', 100000)
+
         self.current_position = {
             'type': order_type,
             'entry_price': actual_entry_price,
@@ -264,11 +267,13 @@ class BacktestEngine:
         # Profit in pips
         profit_pips = price_change / 0.0001
 
-        # Profit in currency (simplified calculation)
-        profit = price_change * lot_size * 100000  # Assuming standard lot
+        # Profit in currency - use actual contract size from symbol info
+        # Get contract size from current position (stored from symbol_info)
+        contract_size = getattr(self, '_current_contract_size', 100000)
+        profit = price_change * lot_size * contract_size
 
         # Apply commission
-        profit -= self.commission * lot_size * 100000
+        profit -= self.commission * lot_size * contract_size
 
         # Update balance
         self.balance += profit
@@ -306,11 +311,12 @@ class BacktestEngine:
         entry_price = self.current_position['entry_price']
         lot_size = self.current_position['lot_size']
         order_type = self.current_position['type']
+        contract_size = getattr(self, '_current_contract_size', 100000)
 
         if order_type == 'BUY':
-            unrealized_profit = (current_price - entry_price) * lot_size * 100000
+            unrealized_profit = (current_price - entry_price) * lot_size * contract_size
         else:
-            unrealized_profit = (entry_price - current_price) * lot_size * 100000
+            unrealized_profit = (entry_price - current_price) * lot_size * contract_size
 
         self.equity = self.balance + unrealized_profit
 
