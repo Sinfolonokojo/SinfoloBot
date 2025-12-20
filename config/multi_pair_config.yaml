@@ -43,8 +43,8 @@ trading:
       profit_factor: 0.0
 
     USDJPY:
-      enabled: true  # WINNER - 15.16% return!
-      timeframe: "M1"  # M1 for high frequency
+      enabled: false  # DISABLED - losing money with low drawdown strategy
+      timeframe: "M5"  # M5 for better trade quality (was M1)
       expected_return: 15.16
       win_rate: 44.8
       profit_factor: 1.35
@@ -114,65 +114,65 @@ trading:
     start: "08:00"
     end: "16:00"
 
-  # Position Limits - FOCUSED (2 pairs only)
-  max_open_positions: 4  # 2 pairs x 2 positions each
-  max_positions_per_pair: 2  # Allow 2 per pair for scaling
+  # Position Limits - ULTRA CONSERVATIVE (low drawdown target)
+  max_open_positions: 2  # Only 1 position per pair max
+  max_positions_per_pair: 1  # Strict limit
 
-# Risk Management - PROP FIRM SETTINGS (5% daily DD, 10% total DD)
+# Risk Management - BALANCED (4% MAX DRAWDOWN TARGET)
 risk:
-  # Position Sizing - OPTIMIZED for prop firm (4.5% daily DD limit)
-  risk_per_trade: 0.9  # 0.9% per trade (allows ~5 losing trades per day)
+  # Position Sizing - Balanced for 4% max DD with decent returns
+  risk_per_trade: 0.5  # 0.5% per trade (allows ~8 consecutive losses before 4% DD)
 
-  # Stop Loss - MANDATORY
+  # Stop Loss - Moderate
   stop_loss:
     type: "atr"
-    atr_multiplier: 1.5  # Optimized - tighter stops for better risk control
+    atr_multiplier: 1.2  # Balanced stops
 
-  # Take Profit - 1:2 Risk/Reward (Balanced for achievability)
+  # Take Profit - 1:2.5 Risk/Reward (Achievable but profitable)
   take_profit:
     type: "risk_reward"
-    risk_reward_ratio: 2.0
+    risk_reward_ratio: 2.5  # Balanced R:R
 
-  # NO trailing stop for prop firm
+  # NO trailing stop
   trailing_stop:
     enabled: false
 
-  # NO break-even for prop firm
+  # NO break-even
   breakeven_stop:
     enabled: false
 
-  # Daily Loss Limit - PROP FIRM RULE
+  # Daily Loss Limit - STRICT
   max_daily_loss:
     enabled: true
-    percentage: 4.5  # 4.5% daily (prop firm limit)
+    percentage: 2.0  # 2% daily limit (half of max DD)
 
-  # Total Drawdown Limit - PROP FIRM RULE
+  # Total Drawdown Limit - TARGET
   max_total_drawdown:
     enabled: true
-    percentage: 8.0  # 8% total (typical prop firm limit)
+    percentage: 4.0  # 4% HARD LIMIT
 
-  # Maximum Exposure - Multi-pair
-  max_total_exposure: 4.0  # Max 4% of account in positions
+  # Maximum Exposure - Conservative
+  max_total_exposure: 1.0  # Max 1% of account in positions
 
 # Strategy Parameters - Per Pair Optimization
 # Conservative settings for higher win rate and lower drawdown
 strategies:
-  # XAUUSD Settings (H1) - Gold - BALANCED
+  # XAUUSD Settings (H1) - Gold - BALANCED FOR LOW DD
   XAUUSD:
     timeframe: "H1"
     ema_period: 50
     rsi_period: 14
-    rsi_buy_threshold: 40       # Widened for more signals
-    rsi_sell_threshold: 60      # Widened for more signals
+    rsi_buy_threshold: 35       # Moderately strict
+    rsi_sell_threshold: 65      # Moderately strict
     use_rsi_exit: false
     atr_period: 14
     adx_period: 14
-    min_adx: 18                 # Relaxed for more signals
-    risk_reward: 2.0
-    sl_atr_multiplier: 1.5
-    min_atr: 0.4                # Further relaxed
-    min_ema_distance: 0.2       # More pullbacks allowed
-    min_confidence: 0.55
+    min_adx: 20                 # Moderate trend requirement
+    risk_reward: 2.5            # Balanced target
+    sl_atr_multiplier: 1.2      # Moderate stops
+    min_atr: 0.6                # Moderate volatility requirement
+    min_ema_distance: 0.3       # Moderate pullback
+    min_confidence: 0.65        # Moderate confidence
     min_data_points: 60
     require_rsi_momentum: false
 
@@ -233,24 +233,24 @@ strategies:
     min_data_points: 60
     require_rsi_momentum: true
 
-  # USDJPY Settings (M1) - High frequency - BALANCED
+  # USDJPY Settings (M5) - Moderate frequency - BALANCED FOR LOW DD
   USDJPY:
-    timeframe: "M1"
+    timeframe: "M5"
     ema_period: 50
     rsi_period: 14
-    rsi_buy_threshold: 40      # Widened for more signals
-    rsi_sell_threshold: 60     # Widened for more signals
+    rsi_buy_threshold: 35      # Moderately strict
+    rsi_sell_threshold: 65     # Moderately strict
     use_rsi_exit: false
     atr_period: 14
     adx_period: 14
-    min_adx: 18                # Lower for more signals
-    risk_reward: 2.0           # Achievable target
-    sl_atr_multiplier: 1.5
-    min_atr: 0.015             # M1 appropriate ATR for JPY
-    min_ema_distance: 0.008    # M1 appropriate distance
-    min_confidence: 0.55       # Lower for more volume
+    min_adx: 20                # Moderate trend requirement
+    risk_reward: 2.5           # Balanced target
+    sl_atr_multiplier: 1.2     # Moderate stops
+    min_atr: 0.05              # M5 appropriate ATR for JPY
+    min_ema_distance: 0.02     # M5 appropriate distance
+    min_confidence: 0.65       # Moderate confidence
     min_data_points: 60
-    require_rsi_momentum: false # Disabled for more signals
+    require_rsi_momentum: false
 
   # EURUSD Settings (M1) - High frequency - BALANCED
   EURUSD:

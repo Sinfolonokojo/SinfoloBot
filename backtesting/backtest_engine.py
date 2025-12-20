@@ -21,7 +21,7 @@ from core.risk_manager import RiskManager
 class BacktestEngine:
     """Backtesting engine for strategy evaluation"""
 
-    def __init__(self, strategy, risk_manager, initial_balance=10000, commission=0.00007,
+    def __init__(self, strategy, risk_manager, initial_balance=10000, commission=7.0,
                  slippage_pips=0.3, use_spread=True, avg_spread_pips=0.5,
                  max_daily_loss_pct=4.0, max_total_drawdown_pct=10.0):
         """
@@ -31,7 +31,7 @@ class BacktestEngine:
             strategy: Strategy instance (BaseStrategy subclass)
             risk_manager: RiskManager instance
             initial_balance: Starting capital
-            commission: Commission per trade (default: 7 pips round-trip)
+            commission: Commission per lot round-trip in USD (default: $7 per lot)
             slippage_pips: Slippage in pips per trade (default: 0.3 pips)
             use_spread: Apply bid/ask spread simulation (default: True)
             avg_spread_pips: Average spread in pips (default: 0.5 for EUR/USD)
@@ -227,8 +227,9 @@ class BacktestEngine:
             sl_pips
         )
 
-        # Store contract size for profit calculations
+        # Store symbol info for profit calculations
         self._current_contract_size = symbol_info.get('trade_contract_size', 100000)
+        self._current_symbol_point = symbol_info.get('point', 0.00001)
 
         self.current_position = {
             'type': order_type,
@@ -264,16 +265,22 @@ class BacktestEngine:
         else:  # SELL
             price_change = entry_price - actual_exit_price
 
-        # Profit in pips
-        profit_pips = price_change / 0.0001
-
-        # Profit in currency - use actual contract size from symbol info
-        # Get contract size from current position (stored from symbol_info)
+        # Get symbol info from current position
         contract_size = getattr(self, '_current_contract_size', 100000)
+        point = getattr(self, '_current_symbol_point', 0.00001)
+
+        # Profit in pips - use actual point value (handles JPY pairs, XAUUSD, etc.)
+        profit_pips = price_change / point
+
+        # Profit in currency - standard forex formula
+        # profit = (price_change / point) * (point_value) * lot_size
+        # For most pairs: point_value = point * contract_size (for account currency = counter currency)
+        # Simplified: profit = price_change * contract_size * lot_size
         profit = price_change * lot_size * contract_size
 
-        # Apply commission
-        profit -= self.commission * lot_size * contract_size
+        # Apply commission (commission is per lot, typically $7 per round trip)
+        # FIX: Don't multiply by contract_size! Commission is per lot only.
+        profit -= self.commission * lot_size
 
         # Update balance
         self.balance += profit
@@ -367,9 +374,10 @@ class BacktestEngine:
         Returns:
             float: Actual entry price after costs
         """
-        # Convert pips to price
-        slippage_value = self.slippage_pips * 0.0001
-        spread_value = (self.avg_spread_pips / 2) * 0.0001  # Half spread on entry
+        # Convert pips to price using actual point value (handles JPY, XAUUSD, etc.)
+        point = getattr(self, '_current_symbol_point', 0.00001)
+        slippage_value = self.slippage_pips * point
+        spread_value = (self.avg_spread_pips / 2) * point  # Half spread on entry
 
         if order_type == 'BUY':
             # Buy at ASK (price + half spread) + slippage
@@ -394,9 +402,10 @@ class BacktestEngine:
         Returns:
             float: Actual exit price after costs
         """
-        # Convert pips to price
-        slippage_value = self.slippage_pips * 0.0001
-        spread_value = (self.avg_spread_pips / 2) * 0.0001  # Half spread on exit
+        # Convert pips to price using actual point value (handles JPY, XAUUSD, etc.)
+        point = getattr(self, '_current_symbol_point', 0.00001)
+        slippage_value = self.slippage_pips * point
+        spread_value = (self.avg_spread_pips / 2) * point  # Half spread on exit
 
         if order_type == 'BUY':
             # Close BUY at BID (price - half spread) - slippage
