@@ -37,7 +37,9 @@
       "Bash(gh repo edit:*)",
       "Bash(python run_multi_pair_bt.py:*)",
       "Bash(venvScriptspython.exe --version)",
-      "Bash(venvScriptspip install -r requirements.txt)"
+      "Bash(venvScriptspip install -r requirements.txt)",
+      "Bash(tee:*)",
+      "Bash(ls:*)"
     ],
     "deny": [],
     "ask": []
