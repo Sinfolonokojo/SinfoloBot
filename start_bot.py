@@ -156,7 +156,7 @@ def main():
             view_summary()
         elif choice == '0':
             clear_screen()
-            print("Goodbye! 👋")
+            print("Goodbye!")
             sys.exit(0)
         else:
             print("Invalid choice. Please try again.")
@@ -167,5 +167,5 @@ if __name__ == "__main__":
         main()
     except KeyboardInterrupt:
         clear_screen()
-        print("\nBot launcher stopped. Goodbye! 👋")
+        print("\nBot launcher stopped. Goodbye!")
         sys.exit(0)
